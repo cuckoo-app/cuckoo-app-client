@@ -30,6 +30,10 @@ export default class Home extends Component {
     this.setState({ isLoading: false });
   }
 
+  shouldComponentUpdate(nextProps) {
+    return true
+  }
+
   jobs() {
     return API.get("jobs", "/jobs");
   }

@@ -1,8 +1,8 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom'
 import { API, Storage } from "aws-amplify";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/styles/prism';
+import LoaderButton from "../components/LoaderButton";
 
 export default class Job extends Component {
   constructor(props) {
@@ -16,6 +16,7 @@ export default class Job extends Component {
       stdout: "",
       width: 0,
       height: 0,
+      isDeleting: null,
     };
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this)
   }
@@ -63,6 +64,35 @@ export default class Job extends Component {
     return API.get("jobs", `/jobs/${this.props.match.params.id}`);
   }
 
+  async deleteJob() {
+    await Storage.vault.remove(this.state.stdout)
+    .then(result => {console.log(result)})
+    .catch(err => console.log(err));
+    return API.del("jobs", `/jobs/${this.props.match.params.id}`);
+  }
+
+  handleDelete = async event => {
+    event.preventDefault();
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this job?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.setState({ isDeleting: true });
+
+    try {
+      await this.deleteJob();
+      this.props.history.push("/");
+    } catch (e) {
+      alert(e);
+      this.setState({ isDeleting: false });
+    }
+  }
+
   render() {
     return (
       <div className="Job">
@@ -77,10 +107,20 @@ export default class Job extends Component {
             <p>Date Modified: {this.state.job.dateModified}</p>
             <hr />
             <h4>Standard Out:</h4>
-            <SyntaxHighlighter language='less' id='test' style={atomDark} customStyle={{fontSize: 16,
+            <SyntaxHighlighter language='zsh' id='test' style={atomDark}
+              customStyle={{fontSize: 16,
               maxHeight: this.state.height / 2, overflow: 'auto'}}>
               {this.state.stdoutText}
             </SyntaxHighlighter>
+            <LoaderButton
+              block
+              bsStyle="danger"
+              bsSize="large"
+              isLoading={this.state.isDeleting}
+              onClick={this.handleDelete}
+              text="Delete"
+              loadingText="Deleting…"
+            />
           </div>
         }
       </div>
