@@ -19,6 +19,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "predeploy": "yarn run build",
+    "deploy": "aws s3 sync build/ s3://cuckoo-app-client --delete",
+    "postdeploy": "aws cloudfront create-invalidation --distribution-id E1CBDU1SWA0UR --paths '/*' && aws cloudfront create-invalidation --distribution-id E3V20ADFTCA0LS --paths '/*'",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
